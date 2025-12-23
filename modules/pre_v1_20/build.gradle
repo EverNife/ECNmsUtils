@@ -1,0 +1,52 @@
+buildscript {
+    repositories {
+        maven { url = 'https://maven.minecraftforge.net/' }
+        jcenter()
+        mavenCentral()
+    }
+}
+
+apply plugin: 'java'
+
+group 'br.com.finalcraft'
+version 'COMPAT'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+compileJava.options.encoding = 'UTF-8'
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+    mavenCentral()
+    jcenter()
+    maven {
+        name = 'spigotmc-repo'
+        url = 'https://hub.spigotmc.org/nexus/content/groups/public/'
+    }
+    maven { url 'https://jitpack.io' }
+    maven {
+        url = 'https://maven.petrus.dev/public'
+    }
+    flatDir { //Change this to where are your local libs
+        dirs 'C:/Users/Petrus/Desktop/Meus/workshop/workshop/PublicLibs'
+    }
+}
+
+dependencies {
+    compileOnly 'org.spigotmc:spigot-api:1.19.2-R0.1-SNAPSHOT'
+    compileOnly "br.com.finalcraft:EverNifeCore:2.0.4"
+
+    //Lombok
+    compileOnly 'org.projectlombok:lombok:1.18.24'
+
+    compileOnly name: "craftbukkit1710" //Thats on you to find out
+    compileOnly name: "craftbukkit1122" //Thats on you to find out
+    compileOnly name: "craftbukkit1165" //Thats on you to find out
+}

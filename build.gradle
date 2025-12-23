@@ -1,0 +1,194 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        jcenter()
+        maven {
+            url = uri("https://plugins.gradle.org/m2/")
+        }
+    }
+    dependencies {
+        classpath "com.github.jengelman.gradle.plugins:shadow:6.1.0"
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'maven-publish'
+apply plugin: "com.github.johnrengelman.shadow"
+
+group 'br.com.finalcraft'
+version '1.1.1'
+
+targetCompatibility = 1.8
+sourceCompatibility = 1.8
+
+compileJava.options.encoding = 'UTF-8'
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+repositories {
+    flatDir { //Change this to where are your local libs
+        dirs 'libs'
+    }
+    mavenCentral()
+    maven {
+        name = 'spigotmc-repo'
+        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots'
+    }
+    maven { url = "https://jitpack.io" }
+    maven { url = "https://maven.petrus.dev/public" }
+}
+
+dependencies {
+    compileOnly 'org.spigotmc:spigot-api:1.19.2-R0.1-SNAPSHOT'
+    compileOnly "br.com.finalcraft:EverNifeCore:2.0.4"
+
+    implementation fileTree(dir: 'libs', include: ['*.jar']) // Include all .jar files in the 'libs' directory
+
+    //Annotations
+    compileOnly 'org.jetbrains:annotations:23.0.0'
+
+    //Lombok
+    compileOnly 'org.projectlombok:lombok:1.18.24'
+}
+
+// Define your projects with their respective JAVA_HOME versions
+def projectsWithJava = [
+        'modules/pre_v1_20': System.getenv('JAVA_HOME'), //Java 8
+        'modules/v1_20_1': 'C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.6.7-hotspot\\',
+        'modules/v1_21_1': 'C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.6.7-hotspot\\',
+]
+
+task buildAndMoveJars {
+    doLast {
+        // Define the projects to be built and moved
+
+        // List to store the paths of the built JAR files
+        def jarFiles = []
+
+        projectsWithJava.each { project, javaHome ->
+
+            // Execute the Gradle build for the project
+            println("[PROJECT_COMPAT] Building project: ${project} with JAVA_HOME=${javaHome}")
+
+            def gradlewBat = System.getProperty('os.name').toLowerCase().contains('windows')
+                    ? 'gradlew.bat'
+                    : 'gradlew'
+
+            def buildResult = exec {
+                // Use the Gradle Wrapper in the project directory
+                workingDir project
+                commandLine gradlewBat, 'build'
+                environment 'JAVA_HOME', javaHome
+                environment 'PATH', "${javaHome}/bin" + File.pathSeparator + System.getenv("PATH")
+                ignoreExitValue = true
+            }
+
+            // Check if the build was successful
+            if (buildResult.exitValue == 0) {
+                println("[PROJECT_COMPAT] Build Completed")
+
+                // Get the built JAR file
+                def projectName = project.substring(project.lastIndexOf('/') + 1)
+                def jarName = "${projectName}-COMPAT.jar"
+                def jarFile = file("$project/build/libs/${jarName}")
+
+                println("[PROJECT_COMPAT] Moving jar '${jarName}' to 'libs' directory")
+
+                def tempDir = file("libs")
+                tempDir.mkdirs()
+                def targetFile = file("$tempDir/${jarName}")
+                jarFile.renameTo(targetFile)
+
+                //Add to jarFiles list
+                jarFiles.add(targetFile)
+            } else {
+                // Print an error message if the build failed
+                println "Build failed for project: $project"
+            }
+        }
+
+    }
+}
+
+clean{
+    doLast {
+        fileTree(dir: 'libs', include: '**/*-COMPAT.jar').each { file ->
+            file.delete()
+        }
+
+        projectsWithJava.each { project, javaHome ->
+
+            // Execute the Gradle build for the project
+            println("[PROJECT_COMPAT] Clean project: ${project}")
+
+            def gradlewBat = System.getProperty('os.name').toLowerCase().contains('windows')
+                    ? 'gradlew.bat'
+                    : 'gradlew'
+
+            def cleanResult = exec {
+                // Use the Gradle Wrapper in the project directory
+                workingDir project
+                commandLine gradlewBat, 'clean'
+                environment 'JAVA_HOME', javaHome
+                environment 'PATH', "${javaHome}/bin" + File.pathSeparator + System.getenv("PATH")
+                ignoreExitValue = true
+            }
+
+            // Check if the build was successful
+            if (cleanResult.exitValue == 0) {
+                println("[PROJECT_COMPAT] Clean Completed")
+            } else {
+                // Print an error message if the build failed
+                println "Clean failed for project: $project"
+            }
+        }
+
+    }
+}
+
+shadowJar {
+    archiveName = "${baseName}-${version}.${extension}"
+}
+
+jar {
+    enabled = false //Disable default jar, only shadow jar will be created
+    dependsOn(buildAndMoveJars)
+    dependsOn(shadowJar { classifier = null })
+}
+
+
+java {
+    if (getCallingTask().equals("publish")){
+        println "[Appending SourcesJar]"
+        withSourcesJar()
+    }
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "PetrusRepo"
+            url = "https://maven.petrus.dev/public"
+            credentials {
+                username = System.env.PETRUSMAVEN_ACTOR
+                password = System.env.PETRUSMAVEN_TOKEN
+            }
+            authentication {
+                basic(BasicAuthentication)
+            }
+        }
+    }
+    publications {
+        petrus(MavenPublication) {
+            groupId = project.group
+            from(components.java)
+            pom.withXml {
+                asNode().appendNode('url','https://petrus.dev')
+                asNode().dependencies.'*'.each() {
+                    it.parent().remove(it) //Remove all dependencies from pom file
+                }
+            }
+        }
+    }
+}
