@@ -1,50 +1,19 @@
-buildscript {
-    repositories {
-        maven { url = 'https://maven.minecraftforge.net/' }
-        jcenter()
-        mavenCentral()
-    }
-}
-
-apply plugin: 'java'
-
 group 'br.com.finalcraft'
-version 'COMPAT'
+version 'dont-matter'
 
-// Mojang ships Java 21 to end users in 1.21.1, so mods should target Java 21.
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-
-compileJava.options.encoding = 'UTF-8'
-
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
-}
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
 repositories {
-    flatDir {
-        dirs 'libs'
-    }
-    mavenCentral()
-    jcenter()
     maven {
         name = 'spigotmc-repo'
-        url = 'https://hub.spigotmc.org/nexus/content/groups/public/'
-    }
-    maven { url 'https://jitpack.io' }
-    maven {
-        url = 'https://maven.petrus.dev/public'
-    }
-    flatDir { //Change this to where are your local libs
-        dirs 'C:/Users/Petrus/Desktop/Meus/workshop/workshop/PublicLibs'
+        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots'
     }
 }
 
 dependencies {
     compileOnly 'org.spigotmc:spigot-api:1.19.2-R0.1-SNAPSHOT'
-    compileOnly "br.com.finalcraft:EverNifeCore:2.0.4"
 
-    //Lombok
-    compileOnly 'org.projectlombok:lombok:1.18.24'
+    compileOnly project(':modules:api-contracts')
 
     compileOnly name: "craftbukkit1211" //Thats on you to find out
 }

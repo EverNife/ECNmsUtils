@@ -1,194 +1,80 @@
-buildscript {
+plugins {
+
+}
+
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'idea'
+    apply plugin: 'java-library'
+    apply plugin: 'maven-publish'
+
+    group = 'br.com.finalcraft'
+    version = '1.1.1'
+
+    sourceCompatibility = 11
+    targetCompatibility = 11
+
+    //This might keep function(parameter variable's Names) on the compiled jar
+    compileJava.options.compilerArgs.add '-parameters'
+    compileTestJava.options.compilerArgs.add '-parameters'
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+    }
+
+    tasks.withType(Test).configureEach {
+        testLogging {
+            events = [TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED]
+            exceptionFormat = TestExceptionFormat.FULL
+            showExceptions = true
+            showCauses = true
+            showStackTraces = true
+        }
+    }
+
     repositories {
+        // Fix issue with lwjgl-freetype not being found on macOS / ForgeGradle issue
+        //
+        // Could not resolve all files for configuration ':_compileJava_1'.
+        // Could not find lwjgl-freetype-3.3.3-natives-macos-patch.jar (org.lwjgl:lwjgl-freetype:3.3.3).
+        maven {
+            url "https://libraries.minecraft.net"
+            content {
+                includeModule("org.lwjgl", "lwjgl-freetype")
+            }
+        }
         mavenCentral()
-        jcenter()
-        maven {
-            url = uri("https://plugins.gradle.org/m2/")
+        maven { url = "https://jitpack.io" }
+        maven { url 'https://libraries.minecraft.net/' }
+        maven { url 'https://maven.petrus.dev/public' }
+        flatDir { //Change this to where are your local libs
+            dirs 'C:/Users/Petrus/Desktop/Meus/workshop/workshop/MyOwnPlugins/Bukkit/FinalCraftCore/libs'
+            dirs 'C:/Users/Petrus/Desktop/Meus/workshop/workshop/PublicLibs'
+            dirs 'C:/Users/Petrus/Desktop/Meus/workshop/workshop/PublicLibs/Bukkit'
         }
     }
+
     dependencies {
-        classpath "com.github.jengelman.gradle.plugins:shadow:6.1.0"
+        compileOnly "br.com.finalcraft:EverNifeCore:2.0.4"
+
+        compileOnly "jakarta.annotation:jakarta.annotation-api:2.1.1"
+
+        //Lombok
+        compileOnly 'org.projectlombok:lombok:1.18.42'
+        annotationProcessor 'org.projectlombok:lombok:1.18.42'
+        testCompileOnly 'org.projectlombok:lombok:1.18.42'
+        testAnnotationProcessor 'org.projectlombok:lombok:1.18.42'
     }
-}
 
-apply plugin: 'java'
-apply plugin: 'maven-publish'
-apply plugin: "com.github.johnrengelman.shadow"
-
-group 'br.com.finalcraft'
-version '1.1.1'
-
-targetCompatibility = 1.8
-sourceCompatibility = 1.8
-
-compileJava.options.encoding = 'UTF-8'
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
-}
-
-repositories {
-    flatDir { //Change this to where are your local libs
-        dirs 'libs'
-    }
-    mavenCentral()
-    maven {
-        name = 'spigotmc-repo'
-        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots'
-    }
-    maven { url = "https://jitpack.io" }
-    maven { url = "https://maven.petrus.dev/public" }
-}
-
-dependencies {
-    compileOnly 'org.spigotmc:spigot-api:1.19.2-R0.1-SNAPSHOT'
-    compileOnly "br.com.finalcraft:EverNifeCore:2.0.4"
-
-    implementation fileTree(dir: 'libs', include: ['*.jar']) // Include all .jar files in the 'libs' directory
-
-    //Annotations
-    compileOnly 'org.jetbrains:annotations:23.0.0'
-
-    //Lombok
-    compileOnly 'org.projectlombok:lombok:1.18.24'
-}
-
-// Define your projects with their respective JAVA_HOME versions
-def projectsWithJava = [
-        'modules/pre_v1_20': System.getenv('JAVA_HOME'), //Java 8
-        'modules/v1_20_1': 'C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.6.7-hotspot\\',
-        'modules/v1_21_1': 'C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.6.7-hotspot\\',
-]
-
-task buildAndMoveJars {
-    doLast {
-        // Define the projects to be built and moved
-
-        // List to store the paths of the built JAR files
-        def jarFiles = []
-
-        projectsWithJava.each { project, javaHome ->
-
-            // Execute the Gradle build for the project
-            println("[PROJECT_COMPAT] Building project: ${project} with JAVA_HOME=${javaHome}")
-
-            def gradlewBat = System.getProperty('os.name').toLowerCase().contains('windows')
-                    ? 'gradlew.bat'
-                    : 'gradlew'
-
-            def buildResult = exec {
-                // Use the Gradle Wrapper in the project directory
-                workingDir project
-                commandLine gradlewBat, 'build'
-                environment 'JAVA_HOME', javaHome
-                environment 'PATH', "${javaHome}/bin" + File.pathSeparator + System.getenv("PATH")
-                ignoreExitValue = true
-            }
-
-            // Check if the build was successful
-            if (buildResult.exitValue == 0) {
-                println("[PROJECT_COMPAT] Build Completed")
-
-                // Get the built JAR file
-                def projectName = project.substring(project.lastIndexOf('/') + 1)
-                def jarName = "${projectName}-COMPAT.jar"
-                def jarFile = file("$project/build/libs/${jarName}")
-
-                println("[PROJECT_COMPAT] Moving jar '${jarName}' to 'libs' directory")
-
-                def tempDir = file("libs")
-                tempDir.mkdirs()
-                def targetFile = file("$tempDir/${jarName}")
-                jarFile.renameTo(targetFile)
-
-                //Add to jarFiles list
-                jarFiles.add(targetFile)
-            } else {
-                // Print an error message if the build failed
-                println "Build failed for project: $project"
-            }
-        }
-
-    }
-}
-
-clean{
-    doLast {
-        fileTree(dir: 'libs', include: '**/*-COMPAT.jar').each { file ->
-            file.delete()
-        }
-
-        projectsWithJava.each { project, javaHome ->
-
-            // Execute the Gradle build for the project
-            println("[PROJECT_COMPAT] Clean project: ${project}")
-
-            def gradlewBat = System.getProperty('os.name').toLowerCase().contains('windows')
-                    ? 'gradlew.bat'
-                    : 'gradlew'
-
-            def cleanResult = exec {
-                // Use the Gradle Wrapper in the project directory
-                workingDir project
-                commandLine gradlewBat, 'clean'
-                environment 'JAVA_HOME', javaHome
-                environment 'PATH', "${javaHome}/bin" + File.pathSeparator + System.getenv("PATH")
-                ignoreExitValue = true
-            }
-
-            // Check if the build was successful
-            if (cleanResult.exitValue == 0) {
-                println("[PROJECT_COMPAT] Clean Completed")
-            } else {
-                // Print an error message if the build failed
-                println "Clean failed for project: $project"
-            }
-        }
-
-    }
-}
-
-shadowJar {
-    archiveName = "${baseName}-${version}.${extension}"
-}
-
-jar {
-    enabled = false //Disable default jar, only shadow jar will be created
-    dependsOn(buildAndMoveJars)
-    dependsOn(shadowJar { classifier = null })
-}
-
-
-java {
-    if (getCallingTask().equals("publish")){
-        println "[Appending SourcesJar]"
-        withSourcesJar()
-    }
-}
-
-publishing {
-    repositories {
-        maven {
-            name = "PetrusRepo"
-            url = "https://maven.petrus.dev/public"
-            credentials {
-                username = System.env.PETRUSMAVEN_ACTOR
-                password = System.env.PETRUSMAVEN_TOKEN
-            }
-            authentication {
-                basic(BasicAuthentication)
-            }
-        }
-    }
-    publications {
-        petrus(MavenPublication) {
-            groupId = project.group
-            from(components.java)
-            pom.withXml {
-                asNode().appendNode('url','https://petrus.dev')
-                asNode().dependencies.'*'.each() {
-                    it.parent().remove(it) //Remove all dependencies from pom file
-                }
-            }
+    configurations.all {
+        attributes {
+            attribute(
+                    TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE,
+                    25
+            )
         }
     }
 }

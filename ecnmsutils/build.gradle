@@ -1,0 +1,32 @@
+plugins {
+    alias(libs.plugins.shadow)
+}
+
+sourceCompatibility = 8
+targetCompatibility = 8
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(8)
+    withSourcesJar()
+    withJavadocJar()
+}
+
+javadoc {
+    options.addStringOption('Xdoclint:-missing', '-quiet')
+}
+
+
+dependencies {
+    implementation project(':modules:pre_v1_20')
+    implementation project(':modules:v1_20_1')
+    implementation project(':modules:v1_21_1')
+}
+
+shadowJar {
+    archiveBaseName.set("ECNmsUtils")
+    archiveClassifier.set('')
+}
+
+artifacts {
+    archives shadowJar
+}

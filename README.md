@@ -12,5 +12,3 @@ Right now supports:
 - 1.20.1 (compiled in java 21)
 - 1.20.2 (compiled in java 21)
 - 1.21.1 (compiled in java 21)
-
-

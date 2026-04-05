@@ -1,4 +1,0 @@
-rootProject.name = 'pre_v1_20'
-
-include 'Commons'
-project(':Commons').projectDir = file('../Commons')

@@ -12,9 +12,5 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'org.bukkit:bukkit:1.12.2-R0.1-SNAPSHOT'
-
-    compileOnly name: "craftbukkit1710" //Thats on you to find out
-    compileOnly name: "craftbukkit1122" //Thats on you to find out
-    compileOnly name: "craftbukkit1165" //Thats on you to find out
+    compileOnly 'org.spigotmc:spigot-api:1.19.2-R0.1-SNAPSHOT'
 }
