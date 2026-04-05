@@ -1,4 +1,4 @@
-package br.com.finalcraft.evernifecore.nms.data.v1_20_R1;
+package br.com.finalcraft.evernifecore.nms.data.v1_21_R1;
 
 import br.com.finalcraft.evernifecore.EverNifeCore;
 import br.com.finalcraft.evernifecore.itemstack.FCItemFactory;
