@@ -30,3 +30,33 @@ shadowJar {
 artifacts {
     archives shadowJar
 }
+
+publishing {
+    repositories {
+        maven {
+            name = "PetrusRepo"
+            url = "https://maven.petrus.dev/public"
+            credentials {
+                username = System.env.PETRUSMAVEN_ACTOR
+                password = System.env.PETRUSMAVEN_TOKEN
+            }
+            authentication {
+                basic(BasicAuthentication)
+            }
+        }
+        
+    }
+    publications {
+        petrus(MavenPublication) {
+            groupId = "br.com.finalcraft"
+            artifactId = "ECNmsUtils"
+            from(components.java)
+            pom.withXml {
+                asNode().appendNode('url','https://petrus.dev')
+                asNode().dependencies.'*'.each() {
+                    it.parent().remove(it) //Remove all dependencies from pom file
+                }
+            }
+        }
+    }
+}
