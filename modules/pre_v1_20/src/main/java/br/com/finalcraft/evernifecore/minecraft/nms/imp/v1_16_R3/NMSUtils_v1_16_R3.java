@@ -1,80 +1,81 @@
-package br.com.finalcraft.evernifecore.nms.imp.v1_7_R4;
+package br.com.finalcraft.evernifecore.minecraft.nms.imp.v1_16_R3;
 
 import br.com.finalcraft.evernifecore.EverNifeCore;
 import br.com.finalcraft.evernifecore.logger.ECDebugModule;
+import br.com.finalcraft.evernifecore.minecraft.nms.INMSUtils;
 import br.com.finalcraft.evernifecore.nms.data.IMCMaterialRegistry;
 import br.com.finalcraft.evernifecore.nms.data.IMcBlockWrapper;
 import br.com.finalcraft.evernifecore.nms.data.IMcItemWrapper;
 import br.com.finalcraft.evernifecore.nms.data.oredict.IMCOreRegistry;
 import br.com.finalcraft.evernifecore.nms.data.oredict.OreDictEntry;
-import br.com.finalcraft.evernifecore.nms.util.INMSUtils;
-import br.com.finalcraft.evernifecore.reflection.FieldAccessor;
-import br.com.finalcraft.evernifecore.reflection.MethodInvoker;
-import br.com.finalcraft.evernifecore.util.FCReflectionUtil;
+import br.com.finalcraft.evernifecore.version.ServerType;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import net.minecraft.server.v1_7_R4.*;
+import net.minecraft.server.v1_16_R3.*;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_7_R4.CraftWorld;
-import org.bukkit.craftbukkit.v1_7_R4.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_7_R4.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_7_R4.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v1_7_R4.util.CraftMagicNumbers;
+import org.bukkit.craftbukkit.v1_16_R3.CraftWorld;
+import org.bukkit.craftbukkit.v1_16_R3.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_16_R3.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_16_R3.util.CraftMagicNumbers;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
-public class NMSUtils_v1_7_R4 implements INMSUtils {
+public class NMSUtils_v1_16_R3 implements INMSUtils {
 
-	public static NMSUtils_v1_7_R4 instance;
+	public static NMSUtils_v1_16_R3 instance;
 
-	private final MethodInvoker<NBTTagCompound> crucible_JsonToNBT_getTagFromJson = FCReflectionUtil.getMethod(			//Crucible_JsonToNBT.getTagFromJson()
-			"io.github.crucible.nbt.Crucible_JsonToNBT","getTagFromJson", String.class
-	);
+	private Class fakePlayerClass = null; 	// net.minecraftforge.common.util.FakePlayer
+	private Field handle_field = null; 		// CraftItemStack.handle
+	private Field tag_field = null; 		// ItemStack.tag
 
-	private final FieldAccessor<ItemStack> handle_field = FCReflectionUtil.getField( 										// CraftItemStack.handle
-			CraftItemStack.class,"handle", ItemStack.class
-	);
-
-	private final FieldAccessor<net.minecraft.server.v1_7_R4.Entity> entity_field = FCReflectionUtil.getField(			// CraftEntity.entity
-			CraftEntity.class,"entity", net.minecraft.server.v1_7_R4.Entity.class
-	);
-	private Class fakePlayerClass = null; 																				// net.minecraftforge.common.util.FakePlayer
-
-	public NMSUtils_v1_7_R4() {
+	public NMSUtils_v1_16_R3() {
 		instance = this;
 		try {
-			fakePlayerClass = Class.forName("net.minecraftforge.common.util.FakePlayer");
+			if (ServerType.isModdedServer()){
+				fakePlayerClass = Class.forName("net.minecraftforge.common.util.FakePlayer");
+			}
 		}catch (Exception e){
-			EverNifeCore.getLog().info("Failed to find FakePlayer Forge's class...");
-			e.printStackTrace();
+			EverNifeCore.getLog().info("Failed to find FakePlayer Forge's class... We are probably not on a forge server :D");
 		}
-		Objects.requireNonNull(handle_field,"CraftItemStack.class 'handle' field cannot be null!");
-		Objects.requireNonNull(entity_field,"CraftEntity.class 'entity' field cannot be null!");
-	}
 
-	private EntityHuman getNMSPlayer(Player p) {
-		CraftPlayer cplayer = (CraftPlayer) p;
-		EntityHuman nmshuman = cplayer.getHandle();
-		return nmshuman;
+		try {
+			if (handle_field == null){
+				handle_field = CraftItemStack.class.getDeclaredField("handle");
+				handle_field.setAccessible(true);
+			}
+		}catch (Exception e){
+			throw new RuntimeException("Failed to check HandleField from CraftItemStack");
+		}
+
+		try {
+			if (tag_field == null){
+				tag_field = ItemStack.class.getDeclaredField("tag");
+				tag_field.setAccessible(true);
+			}
+		}catch (Exception e){
+			throw new RuntimeException("Failed to check NBTTagCompoundField from MCItemStack");
+		}
 	}
 
 	@Override
 	public String getLocalizedName(org.bukkit.inventory.ItemStack itemStack) {
-		net.minecraft.server.v1_7_R4.ItemStack nmsItem = CraftItemStack.asNMSCopy(itemStack);
-		String localizedName = nmsItem.getItem().n(nmsItem);
-		EnumItemRarity itemRarity = nmsItem.w();
+		ItemStack nmsItem = CraftItemStack.asNMSCopy(itemStack);
+		String localizedName = nmsItem.getItem().h(nmsItem).getString();
+		EnumItemRarity itemRarity = nmsItem.v();
 		String prefixColor = itemRarity == EnumItemRarity.COMMON ? "" : itemRarity.e.toString();
 		return prefixColor + localizedName;
 	}
 
 	@Override
 	public org.bukkit.inventory.ItemStack asBukkitItemStack(Object mcItemStack){
-		return CraftItemStack.asCraftMirror((net.minecraft.server.v1_7_R4.ItemStack) mcItemStack);
+		return CraftItemStack.asBukkitCopy((ItemStack) mcItemStack);
 	}
 
 	@Override
@@ -84,10 +85,10 @@ public class NMSUtils_v1_7_R4 implements INMSUtils {
 
 	@Override
 	public String serializeItemStack(org.bukkit.inventory.ItemStack itemStack) {
-		net.minecraft.server.v1_7_R4.ItemStack nmsItem = CraftItemStack.asNMSCopy(itemStack);
-		NBTTagCompound compound = new NBTTagCompound();
-		nmsItem.save(compound);
-		return compound.toString();
+		ItemStack nmsItem = CraftItemStack.asNMSCopy(itemStack);
+		NBTTagCompound nbtTagCompound = new NBTTagCompound();
+		nmsItem.save(nbtTagCompound);
+		return nbtTagCompound.toString();
 	}
 
 	@Override
@@ -105,7 +106,7 @@ public class NMSUtils_v1_7_R4 implements INMSUtils {
 	@Override
 	public void autoRespawnOnDeath(Player player){
 		CraftPlayer craftPlayer = (CraftPlayer) player;
-		PacketPlayInClientCommand playInClientCommand = new PacketPlayInClientCommand(EnumClientCommand.PERFORM_RESPAWN);
+		PacketPlayInClientCommand playInClientCommand = new PacketPlayInClientCommand(PacketPlayInClientCommand.EnumClientCommand.PERFORM_RESPAWN);
 		craftPlayer.getHandle().playerConnection.a(playInClientCommand);
 	}
 
@@ -132,7 +133,7 @@ public class NMSUtils_v1_7_R4 implements INMSUtils {
 		ItemStack mcItemStack = getHandle(itemStack);
 		if (mcItemStack.getItem() instanceof ItemArmor){
 			ItemArmor armor = (ItemArmor) mcItemStack.getItem();
-			return armor.b == 0;
+			return armor.b() == EnumItemSlot.HEAD;
 		}
 		return false;
 	}
@@ -142,7 +143,7 @@ public class NMSUtils_v1_7_R4 implements INMSUtils {
 		ItemStack mcItemStack = getHandle(itemStack);
 		if (mcItemStack.getItem() instanceof ItemArmor){
 			ItemArmor armor = (ItemArmor) mcItemStack.getItem();
-			return armor.b == 1;
+			return armor.b() == EnumItemSlot.CHEST;
 		}
 		return false;
 	}
@@ -152,7 +153,7 @@ public class NMSUtils_v1_7_R4 implements INMSUtils {
 		ItemStack mcItemStack = getHandle(itemStack);
 		if (mcItemStack.getItem() instanceof ItemArmor){
 			ItemArmor armor = (ItemArmor) mcItemStack.getItem();
-			return armor.b == 2;
+			return armor.b() == EnumItemSlot.LEGS;
 		}
 		return false;
 	}
@@ -162,7 +163,7 @@ public class NMSUtils_v1_7_R4 implements INMSUtils {
 		ItemStack mcItemStack = getHandle(itemStack);
 		if (mcItemStack.getItem() instanceof ItemArmor){
 			ItemArmor armor = (ItemArmor) mcItemStack.getItem();
-			return armor.b == 3;
+			return armor.b() == EnumItemSlot.FEET;
 		}
 		return false;
 	}
@@ -170,38 +171,34 @@ public class NMSUtils_v1_7_R4 implements INMSUtils {
 	@Override
 	public boolean isFakePlayer(Player player) {
 		if (fakePlayerClass != null){
-			net.minecraft.server.v1_7_R4.Entity mcEntity = (net.minecraft.server.v1_7_R4.Entity) asMinecraftEntity(player);
-			return fakePlayerClass.isInstance(mcEntity);
+			CraftPlayer craftPlayer = (CraftPlayer) player;
+			EntityPlayer entityPlayer = craftPlayer.getHandle();
+			return fakePlayerClass.isInstance(entityPlayer);
 		}
 		return false;
 	}
 
 	@Override
-	public Entity asBukkitEntity(Object minecraftEntity){
-		return ((net.minecraft.server.v1_7_R4.Entity) minecraftEntity).getBukkitEntity();
+	public Entity asBukkitEntity(Object minecraftEntity) {
+		return ((net.minecraft.server.v1_16_R3.Entity) minecraftEntity).getBukkitEntity();
 	}
 
 	@Override
 	public Object asMinecraftEntity(Entity entity) {
-		try {
-			CraftEntity craftEntity = (CraftEntity) entity;
-			net.minecraft.server.v1_7_R4.Entity mcEntity = entity_field.get(craftEntity);
-			return mcEntity;
-		}catch (Exception e){
-			throw new RuntimeException(e);
-		}
+		return ((CraftEntity) entity).getHandle();
 	}
 
 	@Override
 	public String getItemRegistryName(org.bukkit.inventory.ItemStack item) {
 		ItemStack itemStack = getHandle(item);
-		return Item.REGISTRY.c(itemStack.getItem());
+		MinecraftKey minecraftKey = IRegistry.ITEM.getKey(itemStack.getItem());
+		return minecraftKey.toString();
 	}
 
 	@Override
 	public String getEntityRegistryName(Entity entity) {
 		CraftEntity craftEntity = (CraftEntity) entity;
-		return EntityTypes.b(craftEntity.getHandle());
+		return craftEntity.getHandle().getSaveID();
 	}
 
 	@Override
@@ -210,8 +207,9 @@ public class NMSUtils_v1_7_R4 implements INMSUtils {
 			itemStack = CraftItemStack.asCraftMirror(CraftItemStack.asNMSCopy(itemStack));
 		}
 		if (getHandle(itemStack) == null){
-			ItemStack handle = new ItemStack(CraftMagicNumbers.getItem(itemStack.getType()), itemStack.getAmount(), itemStack.getDurability());
-			setHandle(itemStack, handle);
+            Item item = CraftMagicNumbers.getItem(itemStack.getType(), itemStack.getDurability());
+            ItemStack handle = new ItemStack(item);
+            setHandle(itemStack, handle);
 		}
 		return itemStack;
 	}
@@ -222,11 +220,11 @@ public class NMSUtils_v1_7_R4 implements INMSUtils {
 			String[] args = minecraftIdentifier.split(" ");
 			int count = args.length >= 2 ? Integer.parseInt(args[1]) : 1;
 			int meta = args.length >= 3 ? Integer.parseInt(args[2]) : 0;
-			Item item = (Item) Item.REGISTRY.get(args[0]);
-			if (item == null){
+			Item item = IRegistry.ITEM.get(new MinecraftKey(args[0]));
+			if (item == Items.AIR){
 				throw new RuntimeException("No Registry found for: \"" + args[0] + "\" in [" + minecraftIdentifier + "]");
 			}
-			ItemStack itemStack = new ItemStack(item, count, meta);
+			ItemStack itemStack = new ItemStack(item, count);
 			if (args.length >= 4) {
 				StringBuilder stringBuilder = new StringBuilder();
 				for (int i = 3; i < args.length; i++) {
@@ -235,10 +233,13 @@ public class NMSUtils_v1_7_R4 implements INMSUtils {
 					}
 					stringBuilder.append(args[i]);
 				}
-				NBTTagCompound nbtTagCompound = crucible_JsonToNBT_getTagFromJson.invoke(null, stringBuilder.toString());
+				NBTTagCompound nbtTagCompound = MojangsonParser.parse(stringBuilder.toString());
 				itemStack.setTag(nbtTagCompound);
 			}
-			return CraftItemStack.asCraftMirror(itemStack);
+			if (meta != 0){
+				itemStack.setDamage(meta);
+			}
+			return CraftItemStack.asBukkitCopy(itemStack);
 		}catch (Exception e){
 			throw new RuntimeException(e);
 		}
@@ -248,7 +249,7 @@ public class NMSUtils_v1_7_R4 implements INMSUtils {
 		Objects.requireNonNull(itemStack,"itemStack can not be null!");
 		try {
 			CraftItemStack craftItemStack = (CraftItemStack) itemStack;
-			ItemStack mcStack = handle_field.get(craftItemStack);
+			ItemStack mcStack = (ItemStack) handle_field.get(craftItemStack);
 			return mcStack;
 		}catch (Exception e){
 			Class c = itemStack.getClass();
@@ -276,21 +277,18 @@ public class NMSUtils_v1_7_R4 implements INMSUtils {
 		}
 	}
 
-	private static FieldAccessor<Map> getRegistry = FCReflectionUtil.getField(RegistrySimple.class, "field_82596_a");
-
 	private static IMCMaterialRegistry<IMcBlockWrapper> blockRegistry = null;
 	@Override
 	public IMCMaterialRegistry<IMcBlockWrapper> getBlockRegistry() {
 		if (blockRegistry == null) {
-			Map<String, ?> originalRegistry = getRegistry.get(Block.REGISTRY);
+			ResourceKey<IRegistry<Block>> originalRegistry = IRegistry.j;
 
 			//New BiMaps
 			BiMap<String, IMcBlockWrapper> stringRegistry = HashBiMap.create();
 			BiMap<Material, IMcBlockWrapper> materialRegistry = HashBiMap.create();
 
-			for (Map.Entry<String, ?> entry : originalRegistry.entrySet()) {
-				String resourceLocation = entry.getKey();
-				Block mcBlock = (Block) entry.getValue();
+			for (Block mcBlock : IRegistry.BLOCK) {
+				String resourceLocation = IRegistry.BLOCK.getKey(mcBlock).toString();
 
 				try {
 					Material material = CraftMagicNumbers.getMaterial(mcBlock);
@@ -313,7 +311,7 @@ public class NMSUtils_v1_7_R4 implements INMSUtils {
 					if (handle == null || handle instanceof Block == false){
 						throw new IllegalArgumentException("handle must be a Block!");
 					}
-					String resourceLocation = Block.REGISTRY.c(handle);
+					String resourceLocation = IRegistry.BLOCK.getKey((Block) handle).toString();
 					Material material = CraftMagicNumbers.getMaterial((Block) handle);
 					return createBlockWrapper(resourceLocation, material, (Block)handle);
 				}
@@ -345,15 +343,13 @@ public class NMSUtils_v1_7_R4 implements INMSUtils {
 	@Override
 	public IMCMaterialRegistry<IMcItemWrapper> getItemRegistry() {
 		if (itemRegistry == null) {
-			Map<String, ?> originalRegistry = getRegistry.get(Item.REGISTRY);
 
 			//New BiMaps
 			BiMap<String, IMcItemWrapper> stringRegistry = HashBiMap.create();
 			BiMap<Material, IMcItemWrapper> materialRegistry = HashBiMap.create();
 
-			for (Map.Entry<String, ?> entry : originalRegistry.entrySet()) {
-				String resourceLocation = entry.getKey();
-				Item mcItem = (Item) entry.getValue();
+			for (Item mcItem : IRegistry.ITEM) {
+				String resourceLocation = IRegistry.ITEM.getKey(mcItem).toString();
 
 				try {
 					Material material = CraftMagicNumbers.getMaterial(mcItem);
@@ -372,7 +368,7 @@ public class NMSUtils_v1_7_R4 implements INMSUtils {
 					if (handle == null || handle instanceof Block == false){
 						throw new IllegalArgumentException("handle must be a Block!");
 					}
-					String resourceLocation = Item.REGISTRY.c(handle);
+					String resourceLocation = IRegistry.ITEM.getKey((Item) handle).toString();
 					Material material = CraftMagicNumbers.getMaterial((Item) handle);
 					return createItemWrapper(resourceLocation, material,(Item)handle);
 				}
@@ -405,53 +401,61 @@ public class NMSUtils_v1_7_R4 implements INMSUtils {
 	@Override
 	public IMCOreRegistry getOreRegistry() {
 		if (oreRegistry == null){
-			Class<?> OreDictionary = FCReflectionUtil.getClass("net.minecraftforge.oredict.OreDictionary");
-
-			FieldAccessor<Map<String, Integer>>  nameToId = FCReflectionUtil.getField(OreDictionary, "nameToId");
-			MethodInvoker<List<ItemStack>> getOres = FCReflectionUtil.getMethod(OreDictionary, "getOres", String.class, boolean.class);
-			MethodInvoker<int[]> getOreIDs = FCReflectionUtil.getMethod(OreDictionary, "getOreIDs", ItemStack.class);
-			MethodInvoker<String> getOreName = FCReflectionUtil.getMethod(OreDictionary, "getOreName", int.class);
-
 			oreRegistry = new IMCOreRegistry() {
 				@Override
 				public boolean hasOreName(String oreName) {
-					return nameToId.get(null).containsKey(oreName);
+					return false;
 				}
 
 				@Override
 				public List<String> getAllOreNames() {
-					return new ArrayList<>(nameToId.get(null).keySet());
+					List<String> someItems = new ArrayList<>();
+					int count = 0;
+					for (IMcItemWrapper value : getItemRegistry().getRegistryResourceLocation().values()) {
+						count++;
+						if (count > 300){
+							break;
+						}
+						someItems.add(value.getMCIdentifier());
+					}
+					return someItems;
 				}
 
 				@Override
 				public List<org.bukkit.inventory.ItemStack> getOreItemStacks(String oreName) {
 					List<org.bukkit.inventory.ItemStack> parsedItemStacks = new ArrayList<>();
 
-					for (ItemStack itemStack : getOres.invoke(null, oreName, false)) {
-						parsedItemStacks.add(asBukkitItemStack(itemStack.cloneItemStack()));
-					}
+					IMcItemWrapper object = getItemRegistry().getObject(oreName);
 
-					return parsedItemStacks;
+					return Arrays.asList(
+							object.getItemStack()
+					);
 				}
 
 				@Override
 				public List<String> getOreNamesFrom(org.bukkit.inventory.ItemStack itemStack) {
-					ItemStack mcItemStack = (ItemStack) asMinecraftItemStack(itemStack);
-					int[] oreIsd = getOreIDs.invoke(null, mcItemStack);
 					List<String> oreNames = new ArrayList<>();
-					for (int oreIdNumber : oreIsd) {
-						oreNames.add(getOreName.invoke(null, oreIdNumber));
-					}
 					return oreNames;
 				}
 
 				@Override
 				public List<OreDictEntry> getAllOreEntries() {
-					List<OreDictEntry> oreDictEntries = new ArrayList<>();
-					for (String allOreName : getAllOreNames()) {
-						oreDictEntries.add(new OreDictEntry(allOreName));
+					List<OreDictEntry> someItems = new ArrayList<>();
+					int count = 0;
+					for (IMcItemWrapper value : getItemRegistry().getRegistryResourceLocation().values()) {
+						count++;
+						if (count > 300){
+							break;
+						}
+						someItems.add(new OreDictEntry(value.getMCIdentifier()));
 					}
-					return oreDictEntries;
+					return someItems;
+//
+//					List<OreDictEntry> oreDictEntries = new ArrayList<>();
+//					for (String allOreName : getAllOreNames()) {
+//						oreDictEntries.add(new OreDictEntry(allOreName));
+//					}
+//					return oreDictEntries;
 				}
 			};
 		}

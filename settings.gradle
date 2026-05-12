@@ -16,6 +16,7 @@ rootProject.name = 'ECNmsUtils'
 
 include 'ecnmsutils'
 include 'modules:api-contracts'
+include 'modules:common'
 include 'modules:pre_v1_20'
 include 'modules:v1_20_1'
 include 'modules:v1_21_1'

@@ -17,6 +17,7 @@ javadoc {
 
 
 dependencies {
+    implementation project(':modules:common')
     implementation project(':modules:pre_v1_20')
     implementation project(':modules:v1_20_1')
     implementation project(':modules:v1_21_1')

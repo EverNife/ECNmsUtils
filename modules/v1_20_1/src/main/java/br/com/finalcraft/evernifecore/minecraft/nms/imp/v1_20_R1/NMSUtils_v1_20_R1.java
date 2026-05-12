@@ -1,30 +1,38 @@
-package br.com.finalcraft.evernifecore.nms.imp.v1_12_R1;
+package br.com.finalcraft.evernifecore.minecraft.nms.imp.v1_20_R1;
 
 import br.com.finalcraft.evernifecore.EverNifeCore;
-import br.com.finalcraft.evernifecore.nms.util.INMSUtils;
+import br.com.finalcraft.evernifecore.minecraft.nms.INMSUtils;
 import br.com.finalcraft.evernifecore.version.ServerType;
-import net.minecraft.server.v1_12_R1.*;
-import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v1_12_R1.util.CraftMagicNumbers;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.MojangsonParser;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.protocol.game.PacketPlayInClientCommand;
+import net.minecraft.resources.MinecraftKey;
+import net.minecraft.server.level.EntityPlayer;
+import net.minecraft.server.level.WorldServer;
+import net.minecraft.world.entity.EnumItemSlot;
+import net.minecraft.world.item.*;
+import org.bukkit.World;
+import org.bukkit.craftbukkit.v1_20_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_20_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_20_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_20_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_20_R1.util.CraftMagicNumbers;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.Field;
 import java.util.Objects;
 
-public class NMSUtils_v1_12_R1 implements INMSUtils {
+public class NMSUtils_v1_20_R1 implements INMSUtils {
 
-	public static NMSUtils_v1_12_R1 instance;
+	public static NMSUtils_v1_20_R1 instance;
 
 	private Class fakePlayerClass = null; 	// net.minecraftforge.common.util.FakePlayer
 	private Field handle_field = null; 		// CraftItemStack.handle
-	private Field entity_field = null; 		// CraftEntity.entity
 	private Field tag_field = null; 		// ItemStack.tag
 
-	public NMSUtils_v1_12_R1() {
+	public NMSUtils_v1_20_R1() {
 		instance = this;
 		try {
 			if (ServerType.isModdedServer()){
@@ -44,104 +52,85 @@ public class NMSUtils_v1_12_R1 implements INMSUtils {
 		}
 
 		try {
-			if (entity_field == null){
-				entity_field = CraftEntity.class.getDeclaredField("entity");
-				entity_field.setAccessible(true);
-			}
-		}catch (Exception e){
-			throw new RuntimeException("Failed to check HandleField from CraftItemStack");
-		}
-
-		try {
 			if (tag_field == null){
-				tag_field = ItemStack.class.getDeclaredField("tag");
+				tag_field = ItemStack.class.getDeclaredField("v");
 				tag_field.setAccessible(true);
 			}
 		}catch (Exception e){
-			throw new RuntimeException("Failed to check HandleField from CraftItemStack");
+			throw new RuntimeException("Failed to check NBTTagCompoundField from MCItemStack");
 		}
-	}
-
-	private Container getPlayerContainer(Player p) {
-		return getNMSPlayer(p).activeContainer;
-	}
-
-	private EntityHuman getNMSPlayer(Player p) {
-		CraftPlayer cplayer = (CraftPlayer) p;
-		EntityHuman nmshuman = cplayer.getHandle();
-		return nmshuman;
 	}
 
 	@Override
 	public String getLocalizedName(org.bukkit.inventory.ItemStack itemStack) {
-		net.minecraft.server.v1_12_R1.ItemStack nmsItem = org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack.asNMSCopy(itemStack);
-		String localizedName = nmsItem.getItem().b(nmsItem);
-		EnumItemRarity itemRarity = nmsItem.v();
-		String prefixColor = itemRarity == EnumItemRarity.COMMON ? "" : itemRarity.e.toString();
+		ItemStack nmsItem = CraftItemStack.asNMSCopy(itemStack);
+		String localizedName = nmsItem.d().h(nmsItem).map(tooltipComponent -> tooltipComponent.toString()).orElse("null");
+		EnumItemRarity itemRarity = nmsItem.C();
+		String prefixColor = itemRarity == EnumItemRarity.a ? "" : itemRarity.e.toString();
 		return prefixColor + localizedName;
 	}
 
 	@Override
 	public org.bukkit.inventory.ItemStack asBukkitItemStack(Object mcItemStack){
-		return org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack.asBukkitCopy((net.minecraft.server.v1_12_R1.ItemStack) mcItemStack);
+		return CraftItemStack.asBukkitCopy((ItemStack) mcItemStack);
+	}
+
+	@Override
+	public Object asMinecraftItemStack(org.bukkit.inventory.ItemStack itemStack) {
+		return CraftItemStack.asNMSCopy(itemStack);
 	}
 
 	@Override
 	public String serializeItemStack(org.bukkit.inventory.ItemStack itemStack) {
-		net.minecraft.server.v1_12_R1.ItemStack nmsItem = org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack.asNMSCopy(itemStack);
-		NBTTagCompound compound = new NBTTagCompound();
-		nmsItem.save(compound);
-		return compound.toString();
+		ItemStack nmsItem = CraftItemStack.asNMSCopy(itemStack);
+		NBTTagCompound nbtTagCompound = new NBTTagCompound();
+		nmsItem.b(nbtTagCompound);
+		return nbtTagCompound.toString();
 	}
 
 	@Override
-	public org.bukkit.World asBukkitWorld(Object minecraftWorld) {
+	public World asBukkitWorld(Object minecraftWorld) {
 		WorldServer world = (WorldServer) minecraftWorld;
 		return world.getWorld();
 	}
 
 	@Override
-	public Object asMinecraftWorld(org.bukkit.World bukkitWorld) {
+	public Object asMinecraftWorld(World bukkitWorld) {
 		WorldServer world = ((CraftWorld) bukkitWorld).getHandle();
 		return world;
 	}
 
 	@Override
-	public Object asMinecraftItemStack(org.bukkit.inventory.ItemStack itemStack) {
-		return org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack.asNMSCopy(itemStack);
-	}
-
-	@Override
 	public void autoRespawnOnDeath(Player player){
 		CraftPlayer craftPlayer = (CraftPlayer) player;
-		PacketPlayInClientCommand playInClientCommand = new PacketPlayInClientCommand(PacketPlayInClientCommand.EnumClientCommand.PERFORM_RESPAWN);
-		craftPlayer.getHandle().playerConnection.a(playInClientCommand);
+		PacketPlayInClientCommand playInClientCommand = new PacketPlayInClientCommand(PacketPlayInClientCommand.EnumClientCommand.a);
+		craftPlayer.getHandle().c.a(playInClientCommand);
 	}
 
 	@Override
 	public boolean isTool(org.bukkit.inventory.ItemStack itemStack) {
 		ItemStack mcItemStack = getHandle(itemStack);
-		return mcItemStack.getItem() instanceof ItemTool;
+		return mcItemStack.d() instanceof ItemTool;
 	}
 
 	@Override
 	public boolean isSword(org.bukkit.inventory.ItemStack itemStack) {
 		ItemStack mcItemStack = getHandle(itemStack);
-		return mcItemStack.getItem() instanceof ItemSword;
+		return mcItemStack.d() instanceof ItemSword;
 	}
 
 	@Override
 	public boolean isArmor(org.bukkit.inventory.ItemStack itemStack) {
 		ItemStack mcItemStack = getHandle(itemStack);
-		return mcItemStack.getItem() instanceof ItemArmor;
+		return mcItemStack.d() instanceof ItemArmor;
 	}
 
 	@Override
 	public boolean isHelmet(org.bukkit.inventory.ItemStack itemStack) {
 		ItemStack mcItemStack = getHandle(itemStack);
-		if (mcItemStack.getItem() instanceof ItemArmor){
-			ItemArmor armor = (ItemArmor) mcItemStack.getItem();
-			return armor.c == EnumItemSlot.HEAD;
+		if (mcItemStack.d() instanceof ItemArmor){
+			ItemArmor armor = (ItemArmor) mcItemStack.d();
+			return armor.g() == EnumItemSlot.f;
 		}
 		return false;
 	}
@@ -149,9 +138,9 @@ public class NMSUtils_v1_12_R1 implements INMSUtils {
 	@Override
 	public boolean isChestplate(org.bukkit.inventory.ItemStack itemStack) {
 		ItemStack mcItemStack = getHandle(itemStack);
-		if (mcItemStack.getItem() instanceof ItemArmor){
-			ItemArmor armor = (ItemArmor) mcItemStack.getItem();
-			return armor.c == EnumItemSlot.CHEST;
+		if (mcItemStack.d() instanceof ItemArmor){
+			ItemArmor armor = (ItemArmor) mcItemStack.d();
+			return armor.g() == EnumItemSlot.e;
 		}
 		return false;
 	}
@@ -159,9 +148,9 @@ public class NMSUtils_v1_12_R1 implements INMSUtils {
 	@Override
 	public boolean isLeggings(org.bukkit.inventory.ItemStack itemStack) {
 		ItemStack mcItemStack = getHandle(itemStack);
-		if (mcItemStack.getItem() instanceof ItemArmor){
-			ItemArmor armor = (ItemArmor) mcItemStack.getItem();
-			return armor.c == EnumItemSlot.LEGS;
+		if (mcItemStack.d() instanceof ItemArmor){
+			ItemArmor armor = (ItemArmor) mcItemStack.d();
+			return armor.g() == EnumItemSlot.d;
 		}
 		return false;
 	}
@@ -169,9 +158,9 @@ public class NMSUtils_v1_12_R1 implements INMSUtils {
 	@Override
 	public boolean isBoots(org.bukkit.inventory.ItemStack itemStack) {
 		ItemStack mcItemStack = getHandle(itemStack);
-		if (mcItemStack.getItem() instanceof ItemArmor){
-			ItemArmor armor = (ItemArmor) mcItemStack.getItem();
-			return armor.c == EnumItemSlot.FEET;
+		if (mcItemStack.d() instanceof ItemArmor){
+			ItemArmor armor = (ItemArmor) mcItemStack.d();
+			return armor.g() == EnumItemSlot.c;
 		}
 		return false;
 	}
@@ -179,39 +168,35 @@ public class NMSUtils_v1_12_R1 implements INMSUtils {
 	@Override
 	public boolean isFakePlayer(Player player) {
 		if (fakePlayerClass != null){
-			net.minecraft.server.v1_12_R1.Entity mcEntity = (net.minecraft.server.v1_12_R1.Entity) asMinecraftEntity(player);
-			return fakePlayerClass.isInstance(mcEntity);
+			CraftPlayer craftPlayer = (CraftPlayer) player;
+			EntityPlayer entityPlayer = craftPlayer.getHandle();
+			return fakePlayerClass.isInstance(entityPlayer);
 		}
 		return false;
 	}
 
 	@Override
 	public Entity asBukkitEntity(Object minecraftEntity) {
-		return ((net.minecraft.server.v1_12_R1.Entity) minecraftEntity).getBukkitEntity();
+		return ((net.minecraft.world.entity.Entity) minecraftEntity).getBukkitEntity();
 	}
 
 	@Override
 	public Object asMinecraftEntity(Entity entity) {
-		try {
-			CraftEntity craftEntity = (CraftEntity) entity;
-			net.minecraft.server.v1_12_R1.Entity mcEntity = (net.minecraft.server.v1_12_R1.Entity) entity_field.get(craftEntity);
-			return mcEntity;
-		}catch (Exception e){
-			throw new RuntimeException(e);
-		}
+		return ((CraftEntity) entity).getHandle();
 	}
 
 	@Override
-	public String getItemRegistryName(org.bukkit.inventory.ItemStack item) {
-		ItemStack itemStack = getHandle(item);
-		MinecraftKey minecraftKey = Item.REGISTRY.b(itemStack.getItem());
-		return minecraftKey.b() + ":" + minecraftKey.getKey();
+	public String getItemRegistryName(org.bukkit.inventory.ItemStack itemStack) {
+		ItemStack mcItemStack = getHandle(itemStack);
+		Item item = mcItemStack.d();
+		MinecraftKey minecraftKey = BuiltInRegistries.i.b(item);
+		return minecraftKey.toString();
 	}
 
 	@Override
 	public String getEntityRegistryName(Entity entity) {
 		CraftEntity craftEntity = (CraftEntity) entity;
-		return craftEntity.getHandle().getSaveID();
+		return craftEntity.getHandle().br();
 	}
 
 	@Override
@@ -220,8 +205,9 @@ public class NMSUtils_v1_12_R1 implements INMSUtils {
 			itemStack = CraftItemStack.asCraftMirror(CraftItemStack.asNMSCopy(itemStack));
 		}
 		if (getHandle(itemStack) == null){
-			ItemStack handle = new ItemStack(CraftMagicNumbers.getItem(itemStack.getType()), itemStack.getAmount(), itemStack.getDurability());
-			setHandle(itemStack, handle);
+            Item item = CraftMagicNumbers.getItem(itemStack.getType(), itemStack.getDurability());
+            ItemStack handle = new ItemStack(item);
+            setHandle(itemStack, handle);
 		}
 		return itemStack;
 	}
@@ -232,11 +218,11 @@ public class NMSUtils_v1_12_R1 implements INMSUtils {
 			String[] args = minecraftIdentifier.split(" ");
 			int count = args.length >= 2 ? Integer.parseInt(args[1]) : 1;
 			int meta = args.length >= 3 ? Integer.parseInt(args[2]) : 0;
-			Item item = Item.REGISTRY.get(new MinecraftKey(args[0]));
-			if (item == null){
+			Item item = BuiltInRegistries.i.a(new MinecraftKey(args[0]));
+			if (item instanceof ItemAir){
 				throw new RuntimeException("No Registry found for: \"" + args[0] + "\" in [" + minecraftIdentifier + "]");
 			}
-			ItemStack itemStack = new ItemStack(item, count, meta);
+			ItemStack itemStack = new ItemStack(item, count);
 			if (args.length >= 4) {
 				StringBuilder stringBuilder = new StringBuilder();
 				for (int i = 3; i < args.length; i++) {
@@ -245,8 +231,11 @@ public class NMSUtils_v1_12_R1 implements INMSUtils {
 					}
 					stringBuilder.append(args[i]);
 				}
-				NBTTagCompound nbtTagCompound = MojangsonParser.parse(stringBuilder.toString());
-				itemStack.setTag(nbtTagCompound);
+				NBTTagCompound nbtTagCompound = MojangsonParser.a(stringBuilder.toString());
+				itemStack.b(nbtTagCompound);
+			}
+			if (meta != 0){
+				itemStack.b(meta);
 			}
 			return CraftItemStack.asBukkitCopy(itemStack);
 		}catch (Exception e){
