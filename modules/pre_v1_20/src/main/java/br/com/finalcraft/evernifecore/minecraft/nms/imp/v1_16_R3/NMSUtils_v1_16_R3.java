@@ -1,14 +1,13 @@
 package br.com.finalcraft.evernifecore.minecraft.nms.imp.v1_16_R3;
 
 import br.com.finalcraft.evernifecore.EverNifeCore;
-import br.com.finalcraft.evernifecore.logger.ECDebugModule;
 import br.com.finalcraft.evernifecore.minecraft.nms.INMSUtils;
-import br.com.finalcraft.evernifecore.nms.data.IMCMaterialRegistry;
-import br.com.finalcraft.evernifecore.nms.data.IMcBlockWrapper;
-import br.com.finalcraft.evernifecore.nms.data.IMcItemWrapper;
-import br.com.finalcraft.evernifecore.nms.data.oredict.IMCOreRegistry;
-import br.com.finalcraft.evernifecore.nms.data.oredict.OreDictEntry;
-import br.com.finalcraft.evernifecore.version.ServerType;
+import br.com.finalcraft.evernifecore.minecraft.nms.data.IMCMaterialRegistry;
+import br.com.finalcraft.evernifecore.minecraft.nms.data.IMcBlockWrapper;
+import br.com.finalcraft.evernifecore.minecraft.nms.data.IMcItemWrapper;
+import br.com.finalcraft.evernifecore.minecraft.nms.data.oredict.IMCOreRegistry;
+import br.com.finalcraft.evernifecore.minecraft.nms.data.oredict.OreDictEntry;
+import br.com.finalcraft.evernifecore.minecraft.util.FCBukkitUtil;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import net.minecraft.server.v1_16_R3.*;
@@ -38,7 +37,7 @@ public class NMSUtils_v1_16_R3 implements INMSUtils {
 	public NMSUtils_v1_16_R3() {
 		instance = this;
 		try {
-			if (ServerType.isModdedServer()){
+			if (FCBukkitUtil.isModded()){
 				fakePlayerClass = Class.forName("net.minecraftforge.common.util.FakePlayer");
 			}
 		}catch (Exception e){
@@ -293,14 +292,14 @@ public class NMSUtils_v1_16_R3 implements INMSUtils {
 				try {
 					Material material = CraftMagicNumbers.getMaterial(mcBlock);
 					if (material == null){
-						EverNifeCore.getLog().debugModule(ECDebugModule.NMS, "Material is null for: " + resourceLocation);
+						EverNifeCore.getLog().debug("Material is null for: " + resourceLocation);
 						continue;
 					}
 					IMcBlockWrapper blockWrapper = createBlockWrapper(resourceLocation, material, mcBlock);
 					stringRegistry.put(resourceLocation, blockWrapper);
 					materialRegistry.put(blockWrapper.getMaterial(), blockWrapper);
 				} catch (Exception e) {
-					EverNifeCore.getLog().warningModule(ECDebugModule.NMS, "Failed to create BlockWrapper for: " + resourceLocation);
+					EverNifeCore.getLog().debug("Failed to create BlockWrapper for: " + resourceLocation);
 					e.printStackTrace();
 				}
 			}
@@ -357,7 +356,7 @@ public class NMSUtils_v1_16_R3 implements INMSUtils {
 					stringRegistry.put(resourceLocation, itemWrapper);
 					materialRegistry.put(itemWrapper.getMaterial(), itemWrapper);
 				} catch (Exception e) {
-					EverNifeCore.getLog().warningModule(ECDebugModule.NMS, "Failed to create BlockWrapper for: " + resourceLocation);
+					EverNifeCore.getLog().warning("Failed to create BlockWrapper for: " + resourceLocation);
 					e.printStackTrace();
 				}
 			}

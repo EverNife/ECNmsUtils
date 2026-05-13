@@ -1,10 +1,10 @@
 package br.com.finalcraft.evernifecore.minecraft.nms.imp.v1_21_R1;
 
 import br.com.finalcraft.evernifecore.EverNifeCore;
-import br.com.finalcraft.evernifecore.itemstack.FCItemFactory;
+import br.com.finalcraft.evernifecore.minecraft.itemstack.FCItemFactory;
 import br.com.finalcraft.evernifecore.minecraft.nms.INMSUtils;
-import br.com.finalcraft.evernifecore.util.FCNBTUtil;
-import br.com.finalcraft.evernifecore.version.ServerType;
+import br.com.finalcraft.evernifecore.minecraft.util.FCBukkitUtil;
+import br.com.finalcraft.evernifecore.minecraft.util.FCNBTUtil;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.protocol.game.PacketPlayInClientCommand;
 import net.minecraft.resources.MinecraftKey;
@@ -34,7 +34,7 @@ public class NMSUtils_v1_21_R1 implements INMSUtils {
 	public NMSUtils_v1_21_R1() {
 		instance = this;
 		try {
-			if (ServerType.isModdedServer()){
+			if (FCBukkitUtil.isModded()){
 				fakePlayerClass = Class.forName("net.minecraftforge.common.util.FakePlayer");
 			}
 		}catch (Exception e){

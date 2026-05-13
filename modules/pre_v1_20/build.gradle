@@ -12,6 +12,7 @@ repositories {
 }
 
 dependencies {
+    compileOnly project(':modules:api-contracts')
     compileOnly project(':modules:common')
 
     compileOnly 'org.bukkit:bukkit:1.12.2-R0.1-SNAPSHOT'
