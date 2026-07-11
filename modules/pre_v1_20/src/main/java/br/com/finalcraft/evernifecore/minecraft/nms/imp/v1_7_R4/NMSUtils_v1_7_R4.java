@@ -8,9 +8,9 @@ import br.com.finalcraft.evernifecore.minecraft.nms.data.IMcBlockWrapper;
 import br.com.finalcraft.evernifecore.minecraft.nms.data.IMcItemWrapper;
 import br.com.finalcraft.evernifecore.minecraft.nms.data.oredict.IMCOreRegistry;
 import br.com.finalcraft.evernifecore.minecraft.nms.data.oredict.OreDictEntry;
-import br.com.finalcraft.evernifecore.reflection.FieldAccessor;
-import br.com.finalcraft.evernifecore.reflection.MethodInvoker;
-import br.com.finalcraft.evernifecore.util.FCReflectionUtil;
+import br.com.finalcraft.everylibs.reflection.FieldAccessor;
+import br.com.finalcraft.everylibs.reflection.MethodInvoker;
+import br.com.finalcraft.everylibs.reflection.FCReflectionUtil;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import net.minecraft.server.v1_7_R4.*;
@@ -32,15 +32,15 @@ public class NMSUtils_v1_7_R4 implements INMSUtils {
 
 	public static NMSUtils_v1_7_R4 instance;
 
-	private final MethodInvoker<NBTTagCompound> crucible_JsonToNBT_getTagFromJson = FCReflectionUtil.getMethod(			//Crucible_JsonToNBT.getTagFromJson()
+	private final MethodInvoker<NBTTagCompound> crucible_JsonToNBT_getTagFromJson = FCReflectionUtil.getMethods().getMethod(			//Crucible_JsonToNBT.getTagFromJson()
 			"io.github.crucible.nbt.Crucible_JsonToNBT","getTagFromJson", String.class
 	);
 
-	private final FieldAccessor<ItemStack> handle_field = FCReflectionUtil.getField( 										// CraftItemStack.handle
+	private final FieldAccessor<ItemStack> handle_field = FCReflectionUtil.getFields().getField( 										// CraftItemStack.handle
 			CraftItemStack.class,"handle", ItemStack.class
 	);
 
-	private final FieldAccessor<net.minecraft.server.v1_7_R4.Entity> entity_field = FCReflectionUtil.getField(			// CraftEntity.entity
+	private final FieldAccessor<net.minecraft.server.v1_7_R4.Entity> entity_field = FCReflectionUtil.getFields().getField(			// CraftEntity.entity
 			CraftEntity.class,"entity", net.minecraft.server.v1_7_R4.Entity.class
 	);
 	private Class fakePlayerClass = null; 																				// net.minecraftforge.common.util.FakePlayer
@@ -276,7 +276,7 @@ public class NMSUtils_v1_7_R4 implements INMSUtils {
 		}
 	}
 
-	private static FieldAccessor<Map> getRegistry = FCReflectionUtil.getField(RegistrySimple.class, "field_82596_a");
+	private static FieldAccessor<Map> getRegistry = FCReflectionUtil.getFields().getField(RegistrySimple.class, "field_82596_a");
 
 	private static IMCMaterialRegistry<IMcBlockWrapper> blockRegistry = null;
 	@Override
@@ -405,12 +405,12 @@ public class NMSUtils_v1_7_R4 implements INMSUtils {
 	@Override
 	public IMCOreRegistry getOreRegistry() {
 		if (oreRegistry == null){
-			Class<?> OreDictionary = FCReflectionUtil.getClass("net.minecraftforge.oredict.OreDictionary");
+			Class<?> OreDictionary = FCReflectionUtil.getClasses().getClass("net.minecraftforge.oredict.OreDictionary");
 
-			FieldAccessor<Map<String, Integer>>  nameToId = FCReflectionUtil.getField(OreDictionary, "nameToId");
-			MethodInvoker<List<ItemStack>> getOres = FCReflectionUtil.getMethod(OreDictionary, "getOres", String.class, boolean.class);
-			MethodInvoker<int[]> getOreIDs = FCReflectionUtil.getMethod(OreDictionary, "getOreIDs", ItemStack.class);
-			MethodInvoker<String> getOreName = FCReflectionUtil.getMethod(OreDictionary, "getOreName", int.class);
+			FieldAccessor<Map<String, Integer>>  nameToId = FCReflectionUtil.getFields().getField(OreDictionary, "nameToId");
+			MethodInvoker<List<ItemStack>> getOres = FCReflectionUtil.getMethods().getMethod(OreDictionary, "getOres", String.class, boolean.class);
+			MethodInvoker<int[]> getOreIDs = FCReflectionUtil.getMethods().getMethod(OreDictionary, "getOreIDs", ItemStack.class);
+			MethodInvoker<String> getOreName = FCReflectionUtil.getMethods().getMethod(OreDictionary, "getOreName", int.class);
 
 			oreRegistry = new IMCOreRegistry() {
 				@Override

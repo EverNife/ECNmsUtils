@@ -12,7 +12,7 @@ subprojects {
     apply plugin: 'maven-publish'
 
     group = 'br.com.finalcraft'
-    version = '1.1.4'
+    version = '1.1.5'
 
     sourceCompatibility = 11
     targetCompatibility = 11
@@ -47,13 +47,21 @@ subprojects {
             }
         }
         mavenCentral()
+        // Resolve the freshly-published evernifecore-minecraft (the one carrying the everylibs
+        // FCReflectionUtil) from mavenLocal, ahead of the older copy on maven.petrus.dev. Scoped to
+        // that one module so it does not shadow any other br.com.finalcraft artifact.
+        mavenLocal {
+            content {
+                includeModule "br.com.finalcraft", "evernifecore-minecraft"
+            }
+        }
         maven { url = "https://jitpack.io" }
         maven { url 'https://libraries.minecraft.net/' }
         maven { url 'https://maven.petrus.dev/public' }
         flatDir { //Change this to where are your local libs
-            dirs 'C:/Users/Petrus/Desktop/Meus/workshop/workshop/MyOwnPlugins/Bukkit/FinalCraftCore/libs'
-            dirs 'C:/Users/Petrus/Desktop/Meus/workshop/workshop/PublicLibs'
-            dirs 'C:/Users/Petrus/Desktop/Meus/workshop/workshop/PublicLibs/Bukkit'
+            dirs 'C:/Meus/workshop/workshop/MyOwnPlugins/Bukkit/FinalCraftCore/libs'
+            dirs 'C:/Meus/workshop/workshop/PublicLibs'
+            dirs 'C:/Meus/workshop/workshop/PublicLibs/Bukkit'
         }
     }
 
