@@ -223,7 +223,7 @@ public class NMSUtils_v1_21_R1 implements INMSUtils {
 				}
 
 				return FCItemFactory.from(CraftItemStack.asBukkitCopy(itemStack))
-						.setNbt(FCNBTUtil.getFrom(stringBuilder.toString().trim()))
+						.editNbt(nbt -> nbt.mergeCompound(FCNBTUtil.parse(stringBuilder.toString().trim())))
 						.build();
 			}
 
