@@ -1,23 +1,11 @@
-group 'br.com.finalcraft'
-version 'dont-matter'
-
-targetCompatibility = 1.8
-sourceCompatibility = 1.8
-
-repositories {
-    maven {
-        name = 'spigotmc-repo'
-        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots'
-    }
-}
-
 dependencies {
     compileOnly project(':modules:api-contracts')
     compileOnly project(':modules:common')
+    compileOnly libs.everylibs.reflection
 
-    compileOnly 'org.bukkit:bukkit:1.12.2-R0.1-SNAPSHOT'
+    compileOnly libs.bukkit
 
-    compileOnly name: "craftbukkit1710" //Thats on you to find out
-    compileOnly name: "craftbukkit1122" //Thats on you to find out
-    compileOnly name: "craftbukkit1165" //Thats on you to find out
+    compileOnly name: 'craftbukkit1710'
+    compileOnly name: 'craftbukkit1122'
+    compileOnly name: 'craftbukkit1165'
 }

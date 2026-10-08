@@ -1,31 +1,27 @@
-plugins {
-
-}
-
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 subprojects {
-    apply plugin: 'java'
-    apply plugin: 'idea'
     apply plugin: 'java-library'
-    apply plugin: 'maven-publish'
 
     group = 'br.com.finalcraft'
-    version = '1.1.5'
+    version = libs.versions.ecnmsutils.get()
 
-    sourceCompatibility = 11
-    targetCompatibility = 11
-
-    //This might keep function(parameter variable's Names) on the compiled jar
-    compileJava.options.compilerArgs.add '-parameters'
-    compileTestJava.options.compilerArgs.add '-parameters'
+    // One JDK compiles and tests every module, and every module emits Java 8 bytecode against the
+    // Java 8 API: the same jar has to load on a 1.7.10 server and on a 1.21.1 one. javac 25 reads
+    // the newer class files of the 1.21.1 CraftBukkit jar and still emits major 52.
+    java {
+        toolchain.languageVersion = JavaLanguageVersion.of(25)
+    }
 
     tasks.withType(JavaCompile).configureEach {
         options.encoding = 'UTF-8'
+        options.release = 8
+        options.compilerArgs.addAll(['-parameters', '-Xlint:-options'])
     }
 
     tasks.withType(Test).configureEach {
+        useJUnitPlatform()
         testLogging {
             events = [TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED]
             exceptionFormat = TestExceptionFormat.FULL
@@ -36,53 +32,21 @@ subprojects {
     }
 
     repositories {
-        // Fix issue with lwjgl-freetype not being found on macOS / ForgeGradle issue
-        //
-        // Could not resolve all files for configuration ':_compileJava_1'.
-        // Could not find lwjgl-freetype-3.3.3-natives-macos-patch.jar (org.lwjgl:lwjgl-freetype:3.3.3).
-        maven {
-            url "https://libraries.minecraft.net"
-            content {
-                includeModule("org.lwjgl", "lwjgl-freetype")
-            }
-        }
         mavenCentral()
-        // Resolve the freshly-published evernifecore-minecraft (the one carrying the everylibs
-        // FCReflectionUtil) from mavenLocal, ahead of the older copy on maven.petrus.dev. Scoped to
-        // that one module so it does not shadow any other br.com.finalcraft artifact.
+        // EveryLibs resolves from mavenLocal until it is published; filtered so it never shadows
+        // another group's resolution.
         mavenLocal {
             content {
-                includeModule "br.com.finalcraft", "evernifecore-minecraft"
+                includeGroup 'br.com.finalcraft.everylibs'
             }
         }
-        maven { url = "https://jitpack.io" }
-        maven { url 'https://libraries.minecraft.net/' }
-        maven { url 'https://maven.petrus.dev/public' }
-        flatDir { //Change this to where are your local libs
-            dirs 'C:/Meus/workshop/workshop/MyOwnPlugins/Bukkit/FinalCraftCore/libs'
-            dirs 'C:/Meus/workshop/workshop/PublicLibs'
-            dirs 'C:/Meus/workshop/workshop/PublicLibs/Bukkit'
-        }
-    }
-
-    dependencies {
-        compileOnly "br.com.finalcraft:evernifecore-minecraft:3.0.1"
-
-        compileOnly "jakarta.annotation:jakarta.annotation-api:2.1.1"
-
-        //Lombok
-        compileOnly 'org.projectlombok:lombok:1.18.42'
-        annotationProcessor 'org.projectlombok:lombok:1.18.42'
-        testCompileOnly 'org.projectlombok:lombok:1.18.42'
-        testAnnotationProcessor 'org.projectlombok:lombok:1.18.42'
-    }
-
-    configurations.all {
-        attributes {
-            attribute(
-                    TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE,
-                    25
-            )
+        maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots' }
+        maven { url = 'https://libraries.minecraft.net/' }
+        // The CraftBukkit jars are in no public repository - the README lists the expected names.
+        flatDir {
+            dirs 'C:/Meus/workshop/workshop/MyOwnPlugins/Bukkit/FinalCraftCore/libs',
+                 'C:/Meus/workshop/workshop/PublicLibs',
+                 'C:/Meus/workshop/workshop/PublicLibs/Bukkit'
         }
     }
 }

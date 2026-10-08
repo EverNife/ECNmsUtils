@@ -1,0 +1,31 @@
+package br.com.finalcraft.ecnmsutils.v1_21_R1;
+
+import br.com.finalcraft.ecnmsutils.entities.ForgeFakePlayers;
+import br.com.finalcraft.ecnmsutils.entities.NmsEntities;
+import net.minecraft.world.entity.Entity;
+import org.bukkit.craftbukkit.v1_21_R1.entity.CraftEntity;
+import org.bukkit.entity.Player;
+
+final class EntitiesV1_21_R1 implements NmsEntities {
+
+    @Override
+    public String getRegistryName(org.bukkit.entity.Entity bukkitEntity) {
+        return ((CraftEntity) bukkitEntity).getHandle().bD();
+    }
+
+    @Override
+    public org.bukkit.entity.Entity asBukkit(Object minecraftEntity) {
+        return ((Entity) minecraftEntity).getBukkitEntity();
+    }
+
+    @Override
+    public Object asMinecraft(org.bukkit.entity.Entity bukkitEntity) {
+        return ((CraftEntity) bukkitEntity).getHandle();
+    }
+
+    @Override
+    public boolean isFakePlayer(Player player) {
+        return ForgeFakePlayers.isFakePlayer(asMinecraft(player));
+    }
+
+}

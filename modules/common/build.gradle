@@ -1,18 +1,11 @@
-group 'br.com.finalcraft'
-version 'dont-matter'
-
-targetCompatibility = 1.8
-sourceCompatibility = 1.8
-
-repositories {
-    maven {
-        name = 'spigotmc-repo'
-        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots'
-    }
-}
-
 dependencies {
-    compileOnly project(':modules:api-contracts')
+    // 1.19.2 for the item Tag API that TagOreDictionary reads; everything else here is API that
+    // already existed on 1.7.10.
+    compileOnly libs.spigot.api.legacy
+    compileOnly libs.everylibs.reflection
 
-    compileOnly 'org.bukkit:bukkit:1.12.2-R0.1-SNAPSHOT'
+    testImplementation libs.spigot.api.legacy
+    testImplementation platform(libs.junit.bom)
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.platform.launcher
 }

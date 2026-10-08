@@ -1,42 +1,35 @@
 plugins {
     alias(libs.plugins.shadow)
+    id 'maven-publish'
 }
 
-sourceCompatibility = 8
-targetCompatibility = 8
-
-java {
-    toolchain.languageVersion = JavaLanguageVersion.of(8)
-    withSourcesJar()
-    withJavadocJar()
-}
-
-javadoc {
-    options.addStringOption('Xdoclint:-missing', '-quiet')
-}
-
-
+// Packaging only: the published artifact is the shadow jar of the four modules below, and it
+// declares no dependency - the consumer brings the server API and everylibs-reflection.
 dependencies {
     implementation project(':modules:common')
     implementation project(':modules:pre_v1_20')
     implementation project(':modules:v1_20_1')
     implementation project(':modules:v1_21_1')
+
+    testImplementation platform(libs.junit.bom)
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.platform.launcher
+}
+
+jar {
+    enabled = false
 }
 
 shadowJar {
-    archiveBaseName.set("ECNmsUtils")
+    archiveBaseName.set('ECNmsUtils')
     archiveClassifier.set('')
-}
-
-artifacts {
-    archives shadowJar
 }
 
 publishing {
     repositories {
         maven {
-            name = "PetrusRepo"
-            url = "https://maven.petrus.dev/public"
+            name = 'PetrusRepo'
+            url = 'https://maven.petrus.dev/public'
             credentials {
                 username = System.env.PETRUSMAVEN_ACTOR
                 password = System.env.PETRUSMAVEN_TOKEN
@@ -45,18 +38,13 @@ publishing {
                 basic(BasicAuthentication)
             }
         }
-        
     }
     publications {
         petrus(MavenPublication) {
-            groupId = "br.com.finalcraft"
-            artifactId = "ECNmsUtils"
-            from(components.java)
-            pom.withXml {
-                asNode().appendNode('url','https://petrus.dev')
-                asNode().dependencies.'*'.each() {
-                    it.parent().remove(it) //Remove all dependencies from pom file
-                }
+            artifactId = 'ECNmsUtils'
+            from(components.shadow)
+            pom {
+                url = 'https://petrus.dev'
             }
         }
     }
