@@ -1,6 +1,13 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
+// The directories holding the CraftBukkit jars, from ECNMSUTILS_CRAFTBUKKIT_LIBS (File.pathSeparator-separated).
+ext.craftBukkitDirs = (System.getenv('ECNMSUTILS_CRAFTBUKKIT_LIBS') ?: '').tokenize(File.pathSeparator)*.trim().findAll()
+if (!craftBukkitDirs) {
+    throw new GradleException("ECNMSUTILS_CRAFTBUKKIT_LIBS is not set. Set it to the directories holding the CraftBukkit " +
+            "jars the README lists (craftbukkit1710 ... craftbukkit1211), separated by '" + File.pathSeparator + "'.")
+}
+
 subprojects {
     apply plugin: 'java-library'
 
@@ -43,10 +50,6 @@ subprojects {
         maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots' }
         maven { url = 'https://libraries.minecraft.net/' }
         // The CraftBukkit jars are in no public repository - the README lists the expected names.
-        flatDir {
-            dirs 'C:/Meus/workshop/workshop/MyOwnPlugins/Bukkit/FinalCraftCore/libs',
-                 'C:/Meus/workshop/workshop/PublicLibs',
-                 'C:/Meus/workshop/workshop/PublicLibs/Bukkit'
-        }
+        flatDir { dirs rootProject.craftBukkitDirs }
     }
 }

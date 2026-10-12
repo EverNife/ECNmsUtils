@@ -41,13 +41,14 @@ if (NMSUtils.isSupported()) {
 Gradle 9.5.1 on JDK 25. Every module compiles to Java 8 bytecode against the Java 8 API.
 
 ```powershell
-$env:JAVA_HOME = "C:\Users\Petrus\.jdks\temurin-25.0.3"
+$env:JAVA_HOME = "<your JDK 25>"
 .\gradlew build                    # compiles, tests, and writes ecnmsutils/build/libs/ECNmsUtils-<version>.jar
 .\gradlew publishToMavenLocal
 ```
 
-The CraftBukkit jars are in no public repository; the build reads them from local `flatDir` folders (see
-`build.gradle`): `craftbukkit1710`, `craftbukkit1122`, `craftbukkit1165`, `craftbukkit1201`, `craftbukkit1202` and
+The CraftBukkit jars are in no public repository; the build reads them from the directories listed in the
+`ECNMSUTILS_CRAFTBUKKIT_LIBS` environment variable (separated by `;` on Windows, `:` elsewhere) and fails naming
+it when it is unset: `craftbukkit1710`, `craftbukkit1122`, `craftbukkit1165`, `craftbukkit1201`, `craftbukkit1202` and
 `craftbukkit1211`. `everylibs-reflection` resolves from mavenLocal.
 
 ## Layout
