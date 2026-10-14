@@ -29,6 +29,7 @@ class NMSUtilsTest {
         INMSUtils bridge = NMSUtils.get();
 
         assertThrows(UnsupportedOperationException.class, bridge::items);
+        assertThrows(UnsupportedOperationException.class, bridge::blocks);
         assertThrows(UnsupportedOperationException.class, bridge::entities);
         assertThrows(UnsupportedOperationException.class, bridge::worlds);
         assertThrows(UnsupportedOperationException.class, bridge::registries);

@@ -20,6 +20,7 @@ import br.com.finalcraft.ecnmsutils.NMSUtils;
 
 if (NMSUtils.isSupported()) {
     String id = NMSUtils.get().items().getRegistryName(itemStack);           // "minecraft:stone"
+    String block = NMSUtils.get().blocks().getRegistryName(Material.REDSTONE_WIRE); // "minecraft:redstone_wire"
     ItemStack two = NMSUtils.get().items().fromRegistryName(id, 2, 0);
     Object handle = NMSUtils.get().entities().asMinecraft(player);
     List<String> names = NMSUtils.get().registries().oreDictionary().getOreNamesFrom(itemStack);
@@ -30,7 +31,7 @@ if (NMSUtils.isSupported()) {
   `UnsupportedOperationException` saying which server it saw; `isSupported()` is the check, `revision()` names the
   revision being served.
 - Subjects: `items()` (registry name, localized name, Bukkit/Minecraft conversion, handle validation, tool/sword/armor
-  checks), `entities()` (registry name, conversion, Forge/NeoForge fake player), `worlds()` (conversion) and
+  checks), `blocks()` (the block's own registry name, which is not always its item's), `entities()` (registry name, conversion, Forge/NeoForge fake player), `worlds()` (conversion) and
   `registries().oreDictionary()`.
 - `items().asBukkit(...)` is a mirror of the Minecraft stack on 1.7.10 and a copy everywhere else.
 - The ore dictionary answers in the names of the running revision: `logWood`, `ingotCopper` on the Forge revisions,

@@ -1,5 +1,6 @@
 package br.com.finalcraft.ecnmsutils;
 
+import br.com.finalcraft.ecnmsutils.blocks.NmsBlocks;
 import br.com.finalcraft.ecnmsutils.entities.NmsEntities;
 import br.com.finalcraft.ecnmsutils.items.NmsItems;
 import br.com.finalcraft.ecnmsutils.registries.NmsRegistries;
@@ -14,6 +15,8 @@ public interface INMSUtils {
     NmsRevision revision();
 
     NmsItems items();
+
+    NmsBlocks blocks();
 
     NmsEntities entities();
 

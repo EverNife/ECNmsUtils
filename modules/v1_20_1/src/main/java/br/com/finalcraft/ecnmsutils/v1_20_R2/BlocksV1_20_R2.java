@@ -1,0 +1,21 @@
+package br.com.finalcraft.ecnmsutils.v1_20_R2;
+
+import br.com.finalcraft.ecnmsutils.blocks.NmsBlocks;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.level.block.Block;
+import org.bukkit.Material;
+import org.bukkit.craftbukkit.v1_20_R2.util.CraftMagicNumbers;
+
+final class BlocksV1_20_R2 implements NmsBlocks {
+
+    @Override
+    public String getRegistryName(Material material) {
+        if (!material.isBlock()) {
+            throw new IllegalArgumentException(material + " is an item, not a block, so the block registry has no name for it. "
+                    + "Ask NMSUtils.get().items().getRegistryName(ItemStack) for an item's name.");
+        }
+        Block block = CraftMagicNumbers.getBlock(material);
+        return BuiltInRegistries.f.b(block).toString();
+    }
+
+}

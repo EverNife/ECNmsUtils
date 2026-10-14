@@ -5,6 +5,15 @@ All notable changes to this project. Follows [Keep a Changelog](https://keepacha
 
 Published as `br.com.finalcraft:ECNmsUtils`.
 
+## [2.1.0] - 2026-10-13
+
+### Added
+
+- **`blocks()` subject.** `NMSUtils.get().blocks().getRegistryName(Material)` reads the name from the server's BLOCK
+  registry on every revision, so it answers what the block is rather than what its item is: redstone dust on the ground
+  is `minecraft:redstone_wire` (its item is `minecraft:redstone`), and on 1.7.10/1.12.2 every metadata variant of a
+  block (red or white wool) answers its block's one name, `minecraft:wool`. A material that is no block is refused.
+
 ## [2.0.0] - 2026-10-08
 
 ECNmsUtils becomes a library of its own: it no longer compiles against EverNifeCore, and its bridge is split by
