@@ -2,6 +2,7 @@ package br.com.finalcraft.ecnmsutils.v1_20_R2;
 
 import br.com.finalcraft.ecnmsutils.INMSUtils;
 import br.com.finalcraft.ecnmsutils.NmsRevision;
+import br.com.finalcraft.ecnmsutils.anvil.NmsAnvil;
 import br.com.finalcraft.ecnmsutils.blocks.NmsBlocks;
 import br.com.finalcraft.ecnmsutils.entities.NmsEntities;
 import br.com.finalcraft.ecnmsutils.items.NmsItems;
@@ -16,6 +17,7 @@ public final class NmsV1_20_R2 implements INMSUtils {
     private final BlocksV1_20_R2 blocks = new BlocksV1_20_R2();
     private final EntitiesV1_20_R2 entities = new EntitiesV1_20_R2();
     private final WorldsV1_20_R2 worlds = new WorldsV1_20_R2();
+    private final AnvilV1_20_R2 anvil = new AnvilV1_20_R2();
     private final NmsOreDictionary oreDictionary = new TagOreDictionary();
     private final NmsRegistries registries = () -> oreDictionary;
 
@@ -47,6 +49,11 @@ public final class NmsV1_20_R2 implements INMSUtils {
     @Override
     public NmsRegistries registries() {
         return registries;
+    }
+
+    @Override
+    public NmsAnvil anvil() {
+        return anvil;
     }
 
 }
