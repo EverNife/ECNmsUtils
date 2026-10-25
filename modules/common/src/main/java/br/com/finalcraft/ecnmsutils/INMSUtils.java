@@ -1,5 +1,6 @@
 package br.com.finalcraft.ecnmsutils;
 
+import br.com.finalcraft.ecnmsutils.anvil.NmsAnvil;
 import br.com.finalcraft.ecnmsutils.blocks.NmsBlocks;
 import br.com.finalcraft.ecnmsutils.entities.NmsEntities;
 import br.com.finalcraft.ecnmsutils.items.NmsItems;
@@ -23,5 +24,8 @@ public interface INMSUtils {
     NmsWorlds worlds();
 
     NmsRegistries registries();
+
+    /** The virtual anvil used as a text prompt. */
+    NmsAnvil anvil();
 
 }

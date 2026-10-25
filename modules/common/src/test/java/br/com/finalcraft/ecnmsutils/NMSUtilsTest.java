@@ -33,6 +33,7 @@ class NMSUtilsTest {
         assertThrows(UnsupportedOperationException.class, bridge::entities);
         assertThrows(UnsupportedOperationException.class, bridge::worlds);
         assertThrows(UnsupportedOperationException.class, bridge::registries);
+        assertThrows(UnsupportedOperationException.class, bridge::anvil);
         assertThrows(UnsupportedOperationException.class, bridge::revision);
     }
 

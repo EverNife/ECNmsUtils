@@ -1,5 +1,6 @@
 package br.com.finalcraft.ecnmsutils;
 
+import br.com.finalcraft.ecnmsutils.anvil.NmsAnvil;
 import br.com.finalcraft.ecnmsutils.blocks.NmsBlocks;
 import br.com.finalcraft.ecnmsutils.entities.NmsEntities;
 import br.com.finalcraft.ecnmsutils.items.NmsItems;
@@ -52,6 +53,11 @@ final class UnsupportedNms implements INMSUtils {
 
     @Override
     public NmsRegistries registries() {
+        throw refusal();
+    }
+
+    @Override
+    public NmsAnvil anvil() {
         throw refusal();
     }
 
