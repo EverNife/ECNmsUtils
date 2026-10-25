@@ -5,6 +5,20 @@ All notable changes to this project. Follows [Keep a Changelog](https://keepacha
 
 Published as `br.com.finalcraft:ECNmsUtils`.
 
+## [2.2.0] - 2026-10-24
+
+### Added
+
+- **`anvil()` subject.** `NMSUtils.get().anvil().open(player, request)` opens a virtual anvil as a text prompt on
+  every served revision: the request's icon sits in the first slot named after the initial text, the title is on the
+  window from 1.14 on and in the icon's lore before that, and whatever the player types reaches the request's
+  `onInput` when they click the result slot - `AnvilVerdict.accept()` closes, `AnvilVerdict.reject(message)` keeps the
+  anvil open with the message as the result item's name (1.7.10 re-sends the window, since that client clears the
+  result on click). Repair cost is always 0, every click inside the window is swallowed and no item ever reaches the
+  player's inventory. `onClose` runs once, only when the window ends without an accepted answer. `isAvailable()` says
+  whether this server's internals accepted the revision's anvil, so a caller can fall back to another channel. Main
+  thread only.
+
 ## [2.1.0] - 2026-10-13
 
 ### Added

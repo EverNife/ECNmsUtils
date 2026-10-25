@@ -17,6 +17,9 @@ plugin that depends on `evernifecore-minecraft` already has it on its classpath.
 
 ```java
 import br.com.finalcraft.ecnmsutils.NMSUtils;
+import br.com.finalcraft.ecnmsutils.anvil.AnvilHandle;
+import br.com.finalcraft.ecnmsutils.anvil.AnvilRequest;
+import br.com.finalcraft.ecnmsutils.anvil.AnvilVerdict;
 
 if (NMSUtils.isSupported()) {
     String id = NMSUtils.get().items().getRegistryName(itemStack);           // "minecraft:stone"
@@ -25,14 +28,24 @@ if (NMSUtils.isSupported()) {
     Object handle = NMSUtils.get().entities().asMinecraft(player);
     List<String> names = NMSUtils.get().registries().oreDictionary().getOreNamesFrom(itemStack);
 }
+
+if (NMSUtils.isSupported() && NMSUtils.get().anvil().isAvailable()) {   // main thread
+    AnvilHandle prompt = NMSUtils.get().anvil().open(player, new AnvilRequest(text -> text.matches("\\d+")
+                    ? AnvilVerdict.accept()
+                    : AnvilVerdict.reject("Type a number"))
+            .setTitle("How many?")
+            .setOnClose(() -> player.sendMessage("Cancelled")));
+}
 ```
 
 - `NMSUtils.get()` is never `null`. On a server it has no bridge for, every subject throws
   `UnsupportedOperationException` saying which server it saw; `isSupported()` is the check, `revision()` names the
   revision being served.
 - Subjects: `items()` (registry name, localized name, Bukkit/Minecraft conversion, handle validation, tool/sword/armor
-  checks), `blocks()` (the block's own registry name, which is not always its item's), `entities()` (registry name, conversion, Forge/NeoForge fake player), `worlds()` (conversion) and
-  `registries().oreDictionary()`.
+  checks), `blocks()` (the block's own registry name, which is not always its item's), `entities()` (registry name, conversion, Forge/NeoForge fake player), `worlds()` (conversion),
+  `registries().oreDictionary()` and `anvil()` (a virtual anvil as a text prompt: the player's text reaches your
+  callback on a click of the result slot, a rejection stays open with its message; no repair cost, no item handed
+  out; `isAvailable()` tells whether this server accepted the revision's anvil).
 - `items().asBukkit(...)` is a mirror of the Minecraft stack on 1.7.10 and a copy everywhere else.
 - The ore dictionary answers in the names of the running revision: `logWood`, `ingotCopper` on the Forge revisions,
   `minecraft:logs`, `forge:ingots/copper`, `c:ingots/copper` on the tag ones. Nothing translates between them.
@@ -55,7 +68,8 @@ it when it is unset: `craftbukkit1710`, `craftbukkit1122`, `craftbukkit1165`, `c
 ## Layout
 
 ```
-modules/common        br.com.finalcraft.ecnmsutils - NMSUtils, the contract, NmsRevision, the shared ore dictionaries
+modules/common        br.com.finalcraft.ecnmsutils - NMSUtils, the contract, NmsRevision, the shared ore dictionaries,
+                      and the anvil package (the prompt contract and its server-free session)
 modules/pre_v1_20     v1_7_R4, v1_12_R1, v1_16_R3
 modules/v1_20_1       v1_20_R1, v1_20_R2
 modules/v1_21_1       v1_21_R1
