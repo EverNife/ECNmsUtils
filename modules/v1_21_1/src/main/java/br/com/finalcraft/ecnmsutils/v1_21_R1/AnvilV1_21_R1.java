@@ -7,6 +7,7 @@ import br.com.finalcraft.ecnmsutils.anvil.AnvilRequest;
 import br.com.finalcraft.ecnmsutils.anvil.AnvilSession;
 import br.com.finalcraft.ecnmsutils.anvil.InventoryAnvilWindow;
 import net.minecraft.world.entity.player.EntityHuman;
+import net.minecraft.world.inventory.Container;
 import net.minecraft.world.inventory.ContainerAnvil;
 import net.minecraft.world.inventory.InventoryClickType;
 import org.bukkit.craftbukkit.v1_21_R1.entity.CraftPlayer;
@@ -36,19 +37,25 @@ final class AnvilV1_21_R1 extends AbstractNmsAnvil {
             checkReachable = false; //no anvil block backs this window, so there is nothing to stand near
             //the Bukkit view reads the title once; CraftBukkit's opener re-parses it and has no component for ""
             setTitle(CraftChatMessage.fromString(request.getTitle().isEmpty() ? " " : request.getTitle())[0]);
-            window = new InventoryAnvilWindow(player, getBukkitView().getTopInventory(), request, false, () -> w.a(0));
+            window = new InventoryAnvilWindow(player, bukkitView(this).getTopInventory(), request, false, () -> w.a(0));
             session = window.start();
         }
 
         static AnvilHandle open(Player player, AnvilRequest request) {
             PromptContainer container = new PromptContainer(player, request);
-            InventoryView view = container.getBukkitView();
+            InventoryView view = bukkitView(container);
             //CraftBukkit's opener: InventoryOpenEvent, open packet, active container, slot sync
             player.openInventory(view);
             if (player.getOpenInventory() != view) {
                 container.session.onClosed(); //another plugin cancelled the InventoryOpenEvent
             }
             return container.session;
+        }
+
+        //through Container: ContainerAnvil's covariant getBukkitView names Spigot's CraftInventoryView, which Paper and
+        //Arclight 1.21.1 replaced with CraftAnvilView - a NoSuchMethodError there
+        private static InventoryView bukkitView(Container container) {
+            return container.getBukkitView();
         }
 
         @Override
